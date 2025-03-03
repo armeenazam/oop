@@ -8,7 +8,12 @@ private:
 public:
     ValidateString(string s) : userString(s) {}
 
-    bool isValid() const {
+// This function is marked as 'const' to indicate that it will not modify
+// any member variables of the class. This ensures the function can be safely
+// called on constant objects and provides guarantees about the immutability
+// of the object during its execution.
+   
+bool isValid() const {
         for (char c : userString) {
             if (!( (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') )) {
                 return false;
