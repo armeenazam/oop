@@ -1,0 +1,101 @@
+#include <iostream>
+using namespace std;
+
+class BankAccount {
+protected:
+    string accountNumber;
+    double balance;
+
+public:
+    BankAccount(string accNum, double bal) : accountNumber(accNum), balance(bal) {}
+    virtual ~BankAccount() {}
+
+    virtual void calculateInterest() = 0;
+    
+    BankAccount operator+(const BankAccount &other) {
+        return BankAccount(accountNumber, balance + other.balance);
+    }
+    BankAccount operator-(double amount) {
+        return BankAccount(accountNumber, balance - amount);
+    }
+    BankAccount operator*(double interestRate) {
+        return BankAccount(accountNumber, balance * (1 + interestRate / 100));
+    }
+    BankAccount operator/(int installments) {
+        return BankAccount(accountNumber, balance / installments);
+    }
+    
+    virtual void deposit(double amount) {
+        balance += amount;
+        cout << "Deposited: $" << amount << " | New Balance: $" << balance << endl;
+    }
+    virtual void deposit(double amount, string method) {
+        balance += amount;
+        cout << "Deposited: $" << amount << " via " << method << " | New Balance: $" << balance << endl;
+    }
+    
+    virtual void withdraw(double amount) = 0;
+    
+    void displayBalance() {
+        cout << "Account Number: " << accountNumber << " | Balance: $" << balance << endl;
+    }
+};
+
+class SavingsAccount : public BankAccount {
+public:
+    SavingsAccount(string accNum, double bal) : BankAccount(accNum, bal) {}
+
+    void calculateInterest() override {
+        balance *= 1.05;
+    }
+    
+    void withdraw(double amount) override {
+        if (balance - amount < 500) {
+            cout << "Withdrawal denied! Savings account must maintain a minimum balance of $500." << endl;
+        } else {
+            balance -= amount;
+            cout << "Withdrawn: $" << amount << " | New Balance: $" << balance << endl;
+        }
+    }
+};
+
+class CurrentAccount : public BankAccount {
+public:
+    CurrentAccount(string accNum, double bal) : BankAccount(accNum, bal) {}
+
+    void calculateInterest() override {
+        cout << "No interest for Current Account." << endl;
+    }
+    
+    void withdraw(double amount) override {
+        if (balance - amount < -1000) {
+            cout << "Withdrawal denied! Overdraft limit exceeded." << endl;
+        } else {
+            balance -= amount;
+            cout << "Withdrawn: $" << amount << " | New Balance: $" << balance << endl;
+        }
+    }
+};
+
+int main() {
+    SavingsAccount savings("SAV123", 1000);
+    CurrentAccount current("CUR456", 500);
+
+    savings.displayBalance();
+    current.displayBalance();
+
+    savings.deposit(200);
+    savings.deposit(500, "Check");
+    current.deposit(1000, "Online");
+    
+    savings.withdraw(600);
+    current.withdraw(1300);
+    
+    savings.calculateInterest();
+    savings.displayBalance();
+
+    BankAccount totalBalance = savings + current;
+    cout << "Total Combined Balance: $" << totalBalance;
+
+    return 0;
+}
