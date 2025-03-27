@@ -1,0 +1,132 @@
+#include <iostream>
+using namespace std;
+
+class Product {
+protected:
+    int productID;
+    double price;
+
+public:
+    Product(int id, double p) : productID(id), price(p) {}
+    virtual ~Product() {}
+
+    virtual double calculatePrice() = 0;
+
+    virtual void applyDiscount(double percentage) {
+        price -= price * (percentage / 100);
+    }
+
+    virtual void applyDiscount(int amount) {
+        price -= amount;
+    }
+
+    virtual void applyDiscount(string type) {
+        if (type == "BOGO") price = price / 2;
+    }
+
+    double getPrice() { return price; }
+    int getID() { return productID; }
+};
+
+class Electronics : public Product {
+public:
+    Electronics(int id, double p) : Product(id, p) {}
+
+    double calculatePrice() override {
+        return price * 1.15;
+    }
+};
+
+class Clothing : public Product {
+public:
+    Clothing(int id, double p) : Product(id, p) {}
+
+    double calculatePrice() override {
+        return price * 1.05;
+    }
+};
+
+class ShoppingCart {
+private:
+    Product* items[10];
+    int count;
+
+public:
+    ShoppingCart() : count(0) {}
+
+    void addProduct(Product* p) {
+        if (count < 10) items[count++] = p;
+    }
+
+    void removeProduct(int id) {
+        for (int i = 0; i < count; i++) {
+            if (items[i]->getID() == id) {
+                for (int j = i; j < count - 1; j++) {
+                    items[j] = items[j + 1];
+                }
+                count--;
+                break;
+            }
+        }
+    }
+
+    double totalPrice() {
+        double total = 0;
+        for (int i = 0; i < count; i++) {
+            total += items[i]->calculatePrice();
+        }
+        return total;
+    }
+
+    ShoppingCart operator+(ShoppingCart& other) {
+        ShoppingCart newCart;
+        for (int i = 0; i < count; i++) newCart.addProduct(items[i]);
+        for (int i = 0; i < other.count; i++) newCart.addProduct(other.items[i]);
+        return newCart;
+    }
+
+    ShoppingCart operator-(int id) {
+        ShoppingCart newCart = *this;
+        newCart.removeProduct(id);
+        return newCart;
+    }
+
+    ShoppingCart operator*(double discount) {
+        ShoppingCart newCart = *this;
+        for (int i = 0; i < newCart.count; i++) newCart.items[i]->applyDiscount(discount);
+        return newCart;
+    }
+
+    ShoppingCart operator/(int users) {
+        ShoppingCart newCart = *this;
+        for (int i = 0; i < newCart.count; i++) newCart.items[i]->applyDiscount(100.0 / users);
+        return newCart;
+    }
+
+    void displayCart() {
+        cout << "Cart Items: " << count << " | Total Price: $" << totalPrice() << endl;
+    }
+};
+
+int main() {
+    Electronics laptop(101, 1200);
+    Clothing tshirt(201, 50);
+
+    ShoppingCart cart1, cart2;
+    cart1.addProduct(&laptop);
+    cart2.addProduct(&tshirt);
+
+    cart1.displayCart();
+    cart2.displayCart();
+
+    ShoppingCart mergedCart = cart1 + cart2;
+    mergedCart.displayCart();
+
+    ShoppingCart discountedCart = mergedCart * 10;
+    discountedCart.displayCart();
+
+    ShoppingCart sharedCart = mergedCart / 2;
+    sharedCart.displayCart();
+
+    return 0;
+}
